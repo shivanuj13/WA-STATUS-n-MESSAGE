@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 class MessageProvider extends ChangeNotifier {
  
   Future<void> sendMessage(String phoneNo,String message) async {
-    if (phoneNo != null && phoneNo.length == 10) {
+    if (phoneNo.length == 10) {
       Uri url = Uri.parse(convertUrl(phoneNo, message));
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
@@ -14,7 +14,7 @@ class MessageProvider extends ChangeNotifier {
 
   String convertUrl(String phone, String message) {
     if (Platform.isAndroid) {
-      return "https://wa.me/+91$phone/?text=${Uri.parse(message)}";
+      return "whatsapp://send?phone=+91$phone&text=${Uri.parse(message)}";
     } else {
       return "https://api.whatsapp.com/send?phone=+91$phone=${Uri.parse(message)}";
     }
