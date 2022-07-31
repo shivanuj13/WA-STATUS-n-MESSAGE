@@ -45,7 +45,7 @@ class _WrapperState extends State<Wrapper> {
               setState(() {
                 _currentIndex = index;
               });
-              _pageController.jumpToPage(_currentIndex);
+              _pageController.animateToPage(_currentIndex,duration: const Duration(milliseconds: 300),curve: Curves.easeIn);
             },
             items: const <BottomNavigationBarItem>[
               BottomNavigationBarItem(
@@ -54,17 +54,24 @@ class _WrapperState extends State<Wrapper> {
                   icon: Icon(Icons.photo_library), label: 'STATUS'),
             ]),
       ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          if(index==1) {
-                context.read<StatusProvider>().fetchMedia(context);
-              }
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        children: _pageList,
+      body: NotificationListener<OverscrollIndicatorNotification>(
+         onNotification: (OverscrollIndicatorNotification overScroll) {
+    overScroll.disallowIndicator();
+    return overScroll.leading;
+    
+  },
+        child: PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            if(_currentIndex!=1&&index==1) {
+                  context.read<StatusProvider>().fetchMedia(context);
+                }
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          children: _pageList,
+        ),
       ),
     );
   }

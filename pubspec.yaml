@@ -38,6 +38,7 @@ dependencies:
   media_scanner:
   video_player:
   flutter_native_splash:
+  photo_view:
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -98,4 +99,4 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 flutter_native_splash:
   image: asset/image/logo.png
-  color: "#FFFFFF"
+  color: "#121212"

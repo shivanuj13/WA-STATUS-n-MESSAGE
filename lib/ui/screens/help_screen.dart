@@ -30,8 +30,9 @@ class HelpPageState extends State<HelpPage> {
              padding: const EdgeInsets.symmetric(vertical:8.0),
              child: Text('Status',style:text1(context)),
            ),
-           Text('1.  Tap on \u{2193} icon to Save any Photo or Video.',style: text2,),
-           Text('2.  Tap on \u{25B6} icon to Play any Video.',style: text2,),
+           Text('1.  Tap on any Photo or Video to open it.',style: text2,),
+           Text('2.  Tap on \u{2193} icon to Save any Photo or Video.',style: text2,),
+           Text('3.  Tap on \u{25B6} icon to Play any Video.',style: text2,),
          
         ],
       ))

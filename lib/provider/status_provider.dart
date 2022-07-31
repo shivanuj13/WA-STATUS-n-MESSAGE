@@ -40,10 +40,11 @@ class StatusProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     await permissionHandler(context);
-    String whatsAppPath = await _findWhatsAppPath();
-    await _fetchImages(whatsAppPath);
+    String whatsAppPath = await _findWhatsAppPath(whatsAppType: 'WhatsApp');
+    String whatsAppBusinessPath = await _findWhatsAppPath(whatsAppType: 'WhatsApp Business');
+    await _fetchImages(whatsAppPath,whatsAppBusinessPath);
     notifyListeners();
-    await _fetchVideos(whatsAppPath);
+    await _fetchVideos(whatsAppPath,whatsAppBusinessPath);
     isLoading = false;
     // print(imagePathList);
     // print(videoPathList);
@@ -51,7 +52,7 @@ class StatusProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String> _findWhatsAppPath() async {
+  Future<String> _findWhatsAppPath({required String whatsAppType}) async {
     Directory? directory = await getExternalStorageDirectory();
     String whatsAppPath = "";
     // print(directory);
@@ -64,33 +65,65 @@ class StatusProvider extends ChangeNotifier {
         break;
       }
     }
-    whatsAppPath = "$whatsAppPath/WhatsApp/Media/.Statuses";
+    whatsAppPath = "$whatsAppPath/$whatsAppType/Media/.Statuses";
     // print(whatsAppPath);
     return whatsAppPath;
   }
 
-  Future<void> _fetchImages(String whatsAppPath) async {
+  Future<void> _fetchImages(String whatsAppPath, String whatsAppBusinessPath) async {
     List<String> imagePathList = [];
-    List<FileSystemEntity> dir = await Directory(whatsAppPath).list().toList();
-    for (FileSystemEntity element in dir) {
+    try {
+  List<FileSystemEntity> whatsAppDir = await Directory(whatsAppPath).list().toList();
+   for (FileSystemEntity element in whatsAppDir) {
       if (element.path.split('.').last == "jpg") {
         imagePathList.add(element.path);
       }
     }
+} on FileSystemException {
+null;
+}
+   
+    try {
+  List<FileSystemEntity> whatsAppBusinessDir = await Directory(whatsAppBusinessPath).list().toList();
+  for (FileSystemEntity element in whatsAppBusinessDir) {
+    if (element.path.split('.').last == "jpg") {
+      imagePathList.add(element.path);
+    }
+  }
+} on FileSystemException {
+null;
+}
     this.imagePathList = imagePathList;
     // print(this.imagePathList);
   }
 
-  Future<void> _fetchVideos(String whatsAppPath) async {
+  Future<void> _fetchVideos(String whatsAppPath, String whatsAppBusinessPath) async {
     List<String> videoPathList = [];
-    List<FileSystemEntity> dir = await Directory(whatsAppPath).list().toList();
-    for (FileSystemEntity element in dir) {
-      if (element.path.split('.').last == "mp4") {
-        videoPathList.add(element.path);
-      }
+    try {
+  List<FileSystemEntity> whatsAppDir = await Directory(whatsAppPath).list().toList();
+  for (FileSystemEntity element in whatsAppDir) {
+    if (element.path.split('.').last == "mp4") {
+      videoPathList.add(element.path);
     }
-    this.videoPathList = videoPathList;
-    await _createThumb();
+  }
+ 
+} on FileSystemException {
+null;
+}
+try {
+  List<FileSystemEntity> whatsAppBusinessDir = await Directory(whatsAppBusinessPath).list().toList();
+  for (FileSystemEntity element in whatsAppBusinessDir) {
+    if (element.path.split('.').last == "mp4") {
+      videoPathList.add(element.path);
+    }
+  }
+ 
+} on FileSystemException {
+null;
+}
+ this.videoPathList = videoPathList;
+  await _createThumb();
+
     // print(this.imagePathList);
   }
 
@@ -105,6 +138,7 @@ class StatusProvider extends ChangeNotifier {
         thumbPathList.add(uint8list);
       }
     }
+
     videoThumbPathList = thumbPathList;
   }
 

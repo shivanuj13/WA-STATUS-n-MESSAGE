@@ -19,7 +19,7 @@ class DialogueWidget extends StatelessWidget {
                         children: const [
                           Padding(
                             padding: EdgeInsets.all(8.0),
-                            child: Text('DOWNLOADING...',style: TextStyle(fontWeight: FontWeight.bold,fontSize:18),),
+                            child: Text('SAVING...',style: TextStyle(fontWeight: FontWeight.bold,fontSize:18),),
                           ),
                           Padding(
                           padding: EdgeInsets.all(8.0),
@@ -38,7 +38,7 @@ class DialogueWidget extends StatelessWidget {
                       children: const [
                         Padding(
                           padding: EdgeInsets.all(8.0),
-                          child: Text('DOWNLOAD SUCCESS !!',style: TextStyle(fontWeight: FontWeight.bold,fontSize:18),),
+                          child: Text('SAVED SUCCESSFULLY !!',style: TextStyle(fontWeight: FontWeight.bold,fontSize:18),),
                         ),
                         Padding(
                           padding: EdgeInsets.all(8.0),

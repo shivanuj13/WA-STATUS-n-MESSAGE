@@ -17,6 +17,7 @@ class _HomePageState extends State<HomePage>
   {
   final TextEditingController _phone = TextEditingController();
   final TextEditingController _message = TextEditingController();
+  bool switchValue=false;
   
 
   @override
@@ -24,6 +25,7 @@ class _HomePageState extends State<HomePage>
     return Consumer<ThemeProvider>(builder: (context, value, widget) {
       return SafeArea(
         child: SingleChildScrollView(
+          
           child: Padding(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -33,12 +35,12 @@ class _HomePageState extends State<HomePage>
                   height: 30,
                 ),
                 const AnimatedLogoWidget(),
-                const Padding(
-                  padding: EdgeInsets.all(18.0),
+                 Padding(
+                  padding: const EdgeInsets.all(18.0),
                   child: Text(
                     'SEND ON WHATSAPP',
                     style: TextStyle(
-                        color: Color(0xff075E54),
+                        color:Theme.of(context).primaryColor,
                         fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -69,6 +71,17 @@ class _HomePageState extends State<HomePage>
                               .read<MessageProvider>()
                               .sendMessage(_phone.text, _message.text);
                         })),
+                        // Padding(
+                        //   padding: const EdgeInsets.symmetric(horizontal:5),
+                        //   child: SwitchListTile(
+                        //     activeColor: Theme.of(context).primaryColor,
+                        //     title:  Text('Are you using WhatsApp Business?',style: text3(context),),
+                        //     value: switchValue, onChanged: (value) {
+                        //     setState(() {
+                        //       switchValue=value;
+                        //     });
+                        //   }),
+                        // )
               ],
             ),
           ),
