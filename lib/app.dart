@@ -1,10 +1,10 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:send_whatsapp/provider/theme_provider.dart';
-import 'package:send_whatsapp/ui/screens/home_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:send_whatsapp/ui/screens/wrapper.dart';
 
 class MyApp extends StatefulWidget {
-  MyApp({Key? key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -14,42 +14,31 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     ThemeProvider.instance.getTheme().then((value) => null);
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(builder: (context, value, widget) {
-      return CupertinoApp(
-        home: HomePage(),
-        theme: ThemeProvider.instance.isDark
-            ? const CupertinoThemeData.raw(
-                Brightness.dark,
-                Color(0xff075E54),
-                Color.fromARGB(255, 255, 255, 255),
-                CupertinoTextThemeData(
-                    navTitleTextStyle: TextStyle(
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        fontSize: 16),
-                    actionTextStyle: TextStyle(
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        fontSize: 16)),
-                Color(0xff075E54),
-                Color.fromARGB(255, 16, 24, 24),
-              )
-            : const CupertinoThemeData.raw(
-                Brightness.light,
-                Color(0xff128C7E),
-                Color.fromARGB(255, 255, 255, 255),
-                CupertinoTextThemeData(
-                    navTitleTextStyle: TextStyle(
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        fontSize: 16),
-                    actionTextStyle: TextStyle(
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        fontSize: 16)),
-                Color(0xff128C7E),
-                Color.fromARGB(255, 255, 255, 255)),
-      );
+      return MaterialApp(
+          home: const Wrapper(),
+          theme: ThemeProvider.instance.isDark
+              ? ThemeData(
+                primaryColor:  const Color(0xff075E54),
+                  colorScheme: const ColorScheme.dark(
+                  surface: Color(0xff075E54),
+                  primary: Color(0xff075E54),
+                  onPrimary: Colors.white,
+                  secondary: Color(0xff075E54),
+                )):ThemeData(
+                  primaryColor: const Color(0xff128C7E) ,
+                  colorScheme: const ColorScheme.light(
+                  surface: Color(0xff128C7E),
+                  primary: Color(0xff128C7E),
+                  onPrimary: Colors.white,
+                  secondary: Color(0xff128C7E))
+                ));
+             
     });
   }
 }
