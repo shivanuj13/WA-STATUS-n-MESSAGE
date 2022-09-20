@@ -10,6 +10,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ThemeProvider.instance.initSharedPref();
   await ThemeProvider.instance.getTheme();
+
   runApp(const App());
 }
 

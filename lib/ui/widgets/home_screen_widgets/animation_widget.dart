@@ -27,17 +27,13 @@ class _AnimatedLogoWidgetState extends State<AnimatedLogoWidget>   with SingleTi
                   position: _animation,
                   child: Stack(
                     children: [
-                       Padding(
-                         padding: const EdgeInsets.only(top:2.0,left: 4.0),
-                         child: Image.asset(
-                          "asset/image/logo-whatsapp.png",
-                          color: Colors.black.withOpacity(0.6),
+                      Material(
+                        elevation:10,
+                        shape: const CircleBorder(),
+                        child: Image.asset(
+                          "asset/image/logo.png",
                           width: 60,
-                      ),
-                       ),
-                      Image.asset(
-                        "asset/image/logo-whatsapp.png",
-                        width: 60,
+                        ),
                       ),
                     ],
                   ),

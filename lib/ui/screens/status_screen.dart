@@ -33,6 +33,7 @@ class _StatusPageState extends State<StatusPage> {
               value.fetchMedia(context);
             },
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Padding(
                 padding: const EdgeInsets.all(18.0),
                 child: Column(

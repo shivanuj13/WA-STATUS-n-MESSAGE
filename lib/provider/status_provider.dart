@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:media_scanner/media_scanner.dart';
+import 'package:folder_file_saver/folder_file_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:saf/saf.dart';
 import 'package:send_whatsapp/ui/util/error_dialogue.dart';
+import 'package:send_whatsapp/ui/widgets/shared/permission_dialogue_widget.dart';
 import 'package:send_whatsapp/ui/widgets/status_screen_widget/dialogue_widget.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
@@ -20,18 +24,37 @@ class StatusProvider extends ChangeNotifier {
   String? selectedVideoPath;
 
   Future<void> permissionHandler(BuildContext context) async {
-    if (await Permission.storage.isDenied) {
-      PermissionStatus status = await Permission.storage.request();
-      if (status.isDenied) {
-        showDialog(
-            context: context,
-            builder: (context) => errorDialogue(context, permissionHandler));
-      } else if (status.isPermanentlyDenied) {
-        showDialog(
-            context: context,
-            builder: (context) => errorDialogue(context, (context) async {
-                  openAppSettings();
-                }));
+    {
+      if (await Permission.storage.isDenied) {
+        PermissionStatus status = await Permission.storage.request();
+        int? sdkVersion = await DeviceInfoPlugin()
+            .androidInfo
+            .then((value) => value.version.sdkInt);
+
+        if (sdkVersion != null && sdkVersion >= 30) {
+          Completer<void> completer=Completer();
+          showDialog(
+              context: context,
+              builder: (context) => PermissionDialogueWidget(onTap: (){
+                completer.complete();
+              },));
+
+              await completer.future;
+         
+          
+        }
+
+        if (status.isDenied) {
+          showDialog(
+              context: context,
+              builder: (context) => errorDialogue(context, permissionHandler));
+        } else if (status.isPermanentlyDenied) {
+          showDialog(
+              context: context,
+              builder: (context) => errorDialogue(context, (context) async {
+                    openAppSettings();
+                  }));
+        }
       }
     }
   }
@@ -40,91 +63,115 @@ class StatusProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     await permissionHandler(context);
-    String whatsAppPath = await _findWhatsAppPath(whatsAppType: 'WhatsApp');
-    String whatsAppBusinessPath = await _findWhatsAppPath(whatsAppType: 'WhatsApp Business');
-    await _fetchImages(whatsAppPath,whatsAppBusinessPath);
-    notifyListeners();
-    await _fetchVideos(whatsAppPath,whatsAppBusinessPath);
-    isLoading = false;
-    // print(imagePathList);
-    // print(videoPathList);
-    // print(videoThumbPathList);
+
+    int? sdkVersion = await DeviceInfoPlugin()
+        .androidInfo
+        .then((value) => value.version.sdkInt);
+
+    if (sdkVersion != null && sdkVersion < 30) {
+      List<String> whatsAppPaths = await _findWhatsAppPath();
+      await _fetchImages(whatsAppPaths);
+      notifyListeners();
+      await _fetchVideos(whatsAppPaths);
+      isLoading = false;
+    } else {
+      await _fetchMediaInSdkGreat29();
+      isLoading = false;
+    }
     notifyListeners();
   }
 
-  Future<String> _findWhatsAppPath({required String whatsAppType}) async {
+  Future<List<String>> _findWhatsAppPath() async {
     Directory? directory = await getExternalStorageDirectory();
-    String whatsAppPath = "";
-    // print(directory);
+    List<String> whatsAppPaths = [];
+    List<String> whatsAppTypes = ['WhatsApp', 'WhatsApp Business'];
+    String rootPath = "";
+
     List<String> paths = directory!.path.split("/");
     for (int x = 1; x < paths.length; x++) {
       String folder = paths[x];
       if (folder != "Android") {
-        whatsAppPath += "/$folder";
+        rootPath += "/$folder";
       } else {
         break;
       }
     }
-    whatsAppPath = "$whatsAppPath/$whatsAppType/Media/.Statuses";
-    // print(whatsAppPath);
-    return whatsAppPath;
+    for (String whatsAppType in whatsAppTypes) {
+      String tmpWhatsAppPath = "$rootPath/$whatsAppType/Media/.Statuses";
+      whatsAppPaths.add(tmpWhatsAppPath);
+    }
+
+    return whatsAppPaths;
   }
 
-  Future<void> _fetchImages(String whatsAppPath, String whatsAppBusinessPath) async {
-    List<String> imagePathList = [];
-    try {
-  List<FileSystemEntity> whatsAppDir = await Directory(whatsAppPath).list().toList();
-   for (FileSystemEntity element in whatsAppDir) {
-      if (element.path.split('.').last == "jpg") {
-        imagePathList.add(element.path);
+  Future<void> _fetchMediaInSdkGreat29() async {
+    Saf saf = Saf("Android/media/com.whatsapp/WhatsApp/Media/.Statuses");
+    bool? isGranted = await saf.getDirectoryPermission(isDynamic: true);
+
+    await saf.clearCache();
+    if (isGranted != null && isGranted) {
+      bool? isSync = await saf.sync();
+      if (isSync != null && isSync) {
+        List<String>? paths = await saf.getCachedFilesPath();
+        if (paths != null) {
+          _loadMediaInSdkGreat29(paths);
+        }
       }
     }
-} on FileSystemException {
-null;
-}
-   
-    try {
-  List<FileSystemEntity> whatsAppBusinessDir = await Directory(whatsAppBusinessPath).list().toList();
-  for (FileSystemEntity element in whatsAppBusinessDir) {
-    if (element.path.split('.').last == "jpg") {
-      imagePathList.add(element.path);
-    }
   }
-} on FileSystemException {
-null;
-}
+
+  Future<void> _loadMediaInSdkGreat29(List<String> paths) async {
+    imagePathList = paths
+        .map((item) => item)
+        .where((item) => item.endsWith('.jpg'))
+        .toList();
+    videoPathList = paths
+        .map((item) => item)
+        .where((item) => item.endsWith('.mp4'))
+        .toList();
+
+    notifyListeners();
+    await _createThumb();
+    notifyListeners();
+  }
+
+  Future<void> _fetchImages(List<String> whatsAppPaths) async {
+    List<String> imagePathList = [];
+    for (String whatsAppPath in whatsAppPaths) {
+      try {
+        List<FileSystemEntity> whatsAppDir =
+            await Directory(whatsAppPath).list().toList();
+        for (FileSystemEntity element in whatsAppDir) {
+          if (element.path.split('.').last == "jpg") {
+            imagePathList.add(element.path);
+          }
+        }
+      } on FileSystemException {
+        null;
+      }
+    }
+
     this.imagePathList = imagePathList;
-    // print(this.imagePathList);
   }
 
-  Future<void> _fetchVideos(String whatsAppPath, String whatsAppBusinessPath) async {
+  Future<void> _fetchVideos(List<String> whatsAppPaths) async {
     List<String> videoPathList = [];
-    try {
-  List<FileSystemEntity> whatsAppDir = await Directory(whatsAppPath).list().toList();
-  for (FileSystemEntity element in whatsAppDir) {
-    if (element.path.split('.').last == "mp4") {
-      videoPathList.add(element.path);
+    for (String whatsAppPath in whatsAppPaths) {
+      try {
+        List<FileSystemEntity> whatsAppDir =
+            await Directory(whatsAppPath).list().toList();
+        for (FileSystemEntity element in whatsAppDir) {
+          if (element.path.split('.').last == "mp4") {
+            videoPathList.add(element.path);
+          }
+        }
+      } on FileSystemException {
+        null;
+      }
     }
-  }
- 
-} on FileSystemException {
-null;
-}
-try {
-  List<FileSystemEntity> whatsAppBusinessDir = await Directory(whatsAppBusinessPath).list().toList();
-  for (FileSystemEntity element in whatsAppBusinessDir) {
-    if (element.path.split('.').last == "mp4") {
-      videoPathList.add(element.path);
-    }
-  }
- 
-} on FileSystemException {
-null;
-}
- this.videoPathList = videoPathList;
-  await _createThumb();
 
-    // print(this.imagePathList);
+    this.videoPathList = videoPathList;
+    await _createThumb();
   }
 
   Future<void> _createThumb() async {
@@ -158,39 +205,10 @@ null;
         builder: (context) {
           return const DialogueWidget();
         });
-    String fileExtension = isVideo ? ".mp4" : ".jpg";
-    String fileStart = isVideo ? "vid" : "img";
-    String appPath = await _findAppPath();
-    File imageFile = File(mediaPath);
-    File newFile = await imageFile
-        .copy('$appPath/$fileStart-${DateTime.now()}$fileExtension');
-    // print(newFile);
-    await MediaScanner.loadMedia(path: newFile.path);
+
+    FolderFileSaver.saveFileToFolderExt(mediaPath);
+
     isDownLoading = false;
     notifyListeners();
-  }
-
-  Future<String> _findAppPath() async {
-    Directory? directory = await getExternalStorageDirectory();
-    String appPath = "";
-    // print(directory);
-    List<String> paths = directory!.path.split("/");
-    for (int x = 1; x < paths.length; x++) {
-      String folder = paths[x];
-      if (folder != "Android") {
-        appPath += "/$folder";
-      } else {
-        break;
-      }
-    }
-    appPath = "$appPath/WA Saver";
-
-    if (!await Directory(appPath).exists()) {
-      Directory dir = await Directory(appPath).create();
-      // print(dir.path);
-      return dir.path;
-    }
-    // print(appPath);
-    return appPath;
   }
 }
