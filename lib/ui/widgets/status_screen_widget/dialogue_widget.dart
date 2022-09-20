@@ -33,18 +33,19 @@ class DialogueWidget extends StatelessWidget {
                       ),
                   )
                   : SizedBox(
-                    height: MediaQuery.of(context).size.height/7,
+                    height: MediaQuery.of(context).size.height/8,
                     child: Column(
                       children: const [
                         Padding(
                           padding: EdgeInsets.all(8.0),
                           child: Text('SAVED SUCCESSFULLY !!',style: TextStyle(fontWeight: FontWeight.bold,fontSize:18),),
                         ),
+                        SizedBox(height: 10,),
                         Padding(
                           padding: EdgeInsets.all(8.0),
-                          child: Text('Your Image is saved to ',),
+                          child: Text('Your Media is saved to Gallery',),
                         ),
-                        Text('Gallery -> WA Saver ',style: TextStyle(fontWeight: FontWeight.bold),),
+                       
                       ],
                     ),
                   ),
